@@ -24,10 +24,9 @@ public class Servidor {
 			System.out.println(name);
 			File f1 = new File("C:/Users/Tatiane/Desktop/" + name);
 			out = new FileOutputStream(f1);
-			    int tamanho = 4096; // buffer de 4KB  
-			    byte[] buffer = new byte[tamanho];  
+			    byte[] buffer = new byte[4096];  
 			    int lidos = -1;  
-			    while ((lidos = in.read(buffer, 0, tamanho)) != -1) {  
+			    while ((lidos = in.read(buffer, 0, 4096)) != -1) {  
 			    	System.out.println(lidos);
 			        out.write(buffer, 0, lidos);  
 			    }  
