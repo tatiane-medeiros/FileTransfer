@@ -12,8 +12,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 
-
-// funcionou png e txt, executar servidor depois cliente
+//Executar primeiro servidor, depois cliente estabelece conexão.
 public class Servidor {
 	private static FileOutputStream out;
 
@@ -21,6 +20,7 @@ public class Servidor {
 		try {
 			ServerSocket serversocket = new ServerSocket(5000);
 			String op;
+			//Permite várias operações de Download e Upload, mas não concorrentes.
 			while(true){
 				Socket clSocket = serversocket.accept();
 				InputStream in = clSocket.getInputStream();
@@ -28,12 +28,14 @@ public class Servidor {
 				BufferedReader reader = new BufferedReader(ir);
 				op = reader.readLine();
 				System.out.println(op);
-				//op.intern();
-				if(op.intern() == "--up"){
-				
+	//upload
+				if(op.intern() == "--up"){				
 					String name = reader.readLine();
 					System.out.println(name);
-					File f1 = new File("C:/Users/Tatiane/Desktop/" + name);
+					ir = new InputStreamReader(in);
+					reader = new BufferedReader(ir);
+					//salva arquivo na pasta server
+					File f1 = new File("server/" + name);
 					out = new FileOutputStream(f1);
 					    byte[] buffer = new byte[4096];  
 					    int lidos = -1;  
@@ -44,25 +46,25 @@ public class Servidor {
 					    out.flush();  
 					    //serversocket.close();
 				}
+	//download
 				else if(op.intern() == "--down"){
 					System.out.println("Download solicitado");
 					OutputStream out = clSocket.getOutputStream();
 					OutputStreamWriter w = new OutputStreamWriter(out);
 					BufferedWriter writer = new BufferedWriter(w);
-					//in = clSocket.getInputStream();
+					
 					String name = reader.readLine();
 					System.out.println(name);
 					// arquivo a ser enviado
-					File f1 = new File("C:/Users/Tatiane/Desktop/" + name);
-					FileInputStream inp = new FileInputStream(f1);	//arquivo sera enviado do servidor
+					File f1 = new File("server/" + name);
+					FileInputStream inp = new FileInputStream(f1);
 					    byte[] buffer = new byte[4096];  
 					    int lidos = -1;    
 					    while ((lidos = inp.read(buffer, 0, 4096)) != -1) {  
 					        out.write(buffer, 0, lidos);  
 					    }  
 					writer.flush();
-				}
-				
+				}				
 				op = "";
 			}
 		} catch (IOException e) {

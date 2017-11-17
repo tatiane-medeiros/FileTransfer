@@ -1,6 +1,8 @@
 package filetransfer;
+import java.net.ConnectException;
 import java.net.Socket;
-import java.awt.Component;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,9 +14,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Scanner;
 
-import javax.swing.JOptionPane;
 
-//atualmente só realiza upload para localhost
 public class Cliente {
 	private static FileInputStream in;
 	private static BufferedWriter writer;
@@ -29,13 +29,13 @@ public class Cliente {
 		System.out.println("\t Upload: --up");
 		String op = sc.nextLine();
 		System.out.println(op);
-		op.intern();
-		//upload
-		if(op == "--up"){
+		
+//upload
+		if(op.intern() == "--up"){
 			//Escolher arquivo.
 			System.out.println("Digite o nome do arquivo a ser enviado:");
 			String name = sc.nextLine();
-			//arquivo na pasta do projeto
+			//Arquivo na pasta do projeto
 			File f = new File(name);
 			if(f.exists()){
 				in = new FileInputStream(f);
@@ -43,63 +43,78 @@ public class Cliente {
 				IP = sc.nextLine();
 				System.out.println("Digite o número da porta:");
 				PORT = sc.nextInt();
-				Socket clientsocket = new Socket(IP, PORT);		// ip do servidor e porta
-				OutputStream out = clientsocket.getOutputStream();
-				OutputStreamWriter w = new OutputStreamWriter(out);
-				BufferedWriter writer = new BufferedWriter(w);
-				writer.write(op + "\n");
-				writer.flush();
-				writer.write(f.getName() + "\n");
-				writer.flush();
-				int size = 4096;		//4KB buffer  
-			    byte[] buffer = new byte[size];  
-			    int lidos = -1;  
-			    while ((lidos = in.read(buffer, 0, size)) != -1) {  
-			        out.write(buffer, 0, lidos);  
-			    }  
-		   
-			    clientsocket.close();
-				System.out.println("Arquivo "+name+" enviado para ["+IP+"]");
+				try{
+					Socket clientsocket = new Socket(IP, PORT);		// ip do servidor e porta
+					OutputStream out = clientsocket.getOutputStream();
+					OutputStreamWriter w = new OutputStreamWriter(out);
+					BufferedWriter writer = new BufferedWriter(w);
+					//Envia mensagem ao servidor avisando que fará um upload
+					writer.write(op + "\n");
+					writer.flush();
+					writer.write(f.getName() + "\n");
+					writer.flush();
+					int size = 4096;		//4KB buffer  
+				    byte[] buffer = new byte[size];  
+				    int lidos = -1;  
+				    while ((lidos = in.read(buffer, 0, size)) != -1) {  
+				        out.write(buffer, 0, lidos);  
+				    } 			   
+				    clientsocket.close();
+				    System.out.println("Arquivo "+name+" enviado para ["+IP+"]");
+				    
+				}catch(ConnectException e){
+					System.err.println("Falha na conexão com servidor.");
+				}catch(UnknownHostException e){
+					System.err.println("Endereço incorreto.");
+				}
 			}
 			else{
 				System.out.println("Arquivo não encontrado!");
 			}
+			System.exit(0);
 		}
 		
-		else if(op == "--down"){
+//download
+		else if(op.intern() == "--down"){
+			try{
 			System.out.println("Digite o endereço ip do servidor:");
 			IP = sc.nextLine();
 			System.out.println("Digite o número da porta:");
 			PORT = sc.nextInt();
 			
-			Socket clientsocket = new Socket(IP, PORT);	//interface: ip do servidor e porta
+			Socket clientsocket = new Socket(IP, PORT);		// ip do servidor e porta
 			OutputStream out = clientsocket.getOutputStream();
 			OutputStreamWriter w = new OutputStreamWriter(out);
 			writer = new BufferedWriter(w);
+			//Envia mensagem ao servidor avisando que fará um download
 			writer.write(op + "\n");
 			writer.flush();
 			sc.nextLine();
+			//Arquivo na pasta do servidor
 			System.out.println("Digite o nome do arquivo a ser baixado:");
 			String name = sc.nextLine();
 			writer.write(name + "\n");
 			writer.flush();
-			//receber arquivo
+			//Recebe arquivo na pasta do projeto
 			File f = new File(name);
-			InputStream inp = clientsocket.getInputStream();
-			InputStreamReader ir = new InputStreamReader(inp);
-			BufferedReader reader = new BufferedReader(ir);
-			//String nameReceived = reader.readLine();
-			
+			InputStream inp = clientsocket.getInputStream();			
 			out = new FileOutputStream(f);
 		    byte[] buffer = new byte[4096];  
 		    int lidos = -1;  
 		    while ((lidos = inp.read(buffer, 0, 4096)) != -1) {  
-		    	System.out.println(lidos);
+		    	//System.out.println(lidos);
 		        out.write(buffer, 0, lidos);  
 		    }  
+		    System.out.println("Download de "+name+" efetuado");
 		    out.flush(); 
 		    clientsocket.close();
 		    System.out.println("Download de "+name+" efetuado");
+		    System.exit(0);
+			}catch(SocketException e){
+				System.err.println("Arquivo não existe!");
+			}catch(UnknownHostException e){
+				System.err.println("Endereço incorreto.");
+			}
 		}
 		
 		   
